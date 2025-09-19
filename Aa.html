@@ -5,153 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Smsm</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
-body { font-family:'Cairo', sans-serif; margin:0; padding:0; background:#f7f1e3; color:#333; }
-h1 { text-align:center; margin:20px 0; }
-.container { max-width:1000px; margin:0 auto; padding:20px; }
-form { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
-form input, form button { padding:10px; border-radius:8px; border:1px solid #ccc; }
-form button { background:#654321; color:#fff; border:none; cursor:pointer; }
-.section { margin-bottom:40px; }
-h2 { margin-bottom:10px; }
-.list { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
-.card { background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
-.card img { width:100%; height:200px; object-fit:cover; }
-.card .info { padding:10px; text-align:center; }
-.card .actions { display:flex; justify-content:space-around; padding:5px 0; }
-.card button { padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+body { font-family:'Cairo',sans-serif; margin:20px; background:#f2f2f2; }
+h1 { text-align:center; margin-bottom:20px; }
+form { margin-bottom:20px; background:#fff; padding:15px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.2); }
+input, button { display:block; width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; }
+button { background:#654321; color:#fff; border:none; cursor:pointer; }
+button:hover { background:#444; }
 </style>
 </head>
 <body>
-<h1>Admin Panel - Smsm</h1>
-<div class="container">
 
-<!-- قسم العروض -->
-<div class="section">
-<h2>إدارة العروض</h2>
-<form id="addBannerForm">
-  <input type="text" placeholder="اسم العرض" id="bannerName" required>
-  <input type="text" placeholder="سعر العرض" id="bannerPrice" required>
-  <input type="file" id="bannerImageFile" accept="image/*" required>
-  <button type="submit">اضافة عرض</button>
+<h1>لوحة ادمن SMSM</h1>
+
+<h2>إضافة منتج</h2>
+<form id="productForm">
+  <input type="text" id="productName" placeholder="اسم المنتج" required>
+  <input type="text" id="productPrice" placeholder="السعر" required>
+  <input type="text" id="productImage" placeholder="رابط الصورة" required>
+  <button type="submit">أضف المنتج</button>
 </form>
-<div class="list" id="bannerList"></div>
-</div>
 
-<!-- قسم المنتجات -->
-<div class="section">
-<h2>إدارة المنتجات</h2>
-<form id="addProductForm">
-  <input type="text" placeholder="اسم المنتج" id="productName" required>
-  <input type="text" placeholder="سعر المنتج" id="productPrice" required>
-  <input type="file" id="productImageFile" accept="image/*" required>
-  <button type="submit">اضافة منتج</button>
+<h2>إضافة عرض</h2>
+<form id="bannerForm">
+  <input type="text" id="bannerName" placeholder="اسم العرض" required>
+  <input type="text" id="bannerPrice" placeholder="السعر" required>
+  <input type="text" id="bannerImage" placeholder="رابط الصورة" required>
+  <button type="submit">أضف العرض</button>
 </form>
-<div class="list" id="productList"></div>
-</div>
 
-</div>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database.js"></script>
 
 <script>
-// ======= العروض =======
-let banners = JSON.parse(localStorage.getItem('smsmBanners')) || [];
-const bannerList = document.getElementById('bannerList');
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-function renderBanners() {
-  bannerList.innerHTML = '';
-  banners.forEach((b,i)=>{
-    const card = document.createElement('div');
-    card.className='card';
-    card.innerHTML = `
-      <img src="${b.image}" alt="${b.name}">
-      <div class="info"><h3>${b.name}</h3><p>${b.price}</p></div>
-      <div class="actions">
-        <button onclick="editBanner(${i})">تعديل</button>
-        <button onclick="deleteBanner(${i})">حذف</button>
-      </div>
-    `;
-    bannerList.appendChild(card);
-  });
-  localStorage.setItem('smsmBanners', JSON.stringify(banners));
-}
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-document.getElementById('addBannerForm').addEventListener('submit', e=>{
+// إضافة منتج
+document.getElementById('productForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name = document.getElementById('productName').value;
+  const price = document.getElementById('productPrice').value;
+  const image = document.getElementById('productImage').value;
+  database.ref('products').push({name, price, image});
+  e.target.reset();
+});
+
+// إضافة عرض
+document.getElementById('bannerForm').addEventListener('submit', e=>{
   e.preventDefault();
   const name = document.getElementById('bannerName').value;
   const price = document.getElementById('bannerPrice').value;
-  const file = document.getElementById('bannerImageFile').files[0];
-  if(file){
-    const reader = new FileReader();
-    reader.onload = function(){
-      banners.push({name,price,image:reader.result});
-      renderBanners();
-      e.target.reset();
-    }
-    reader.readAsDataURL(file);
-  }
+  const image = document.getElementById('bannerImage').value;
+  database.ref('banners').push({name, price, image});
+  e.target.reset();
 });
-
-function editBanner(i){
-  const b = banners[i];
-  document.getElementById('bannerName').value = b.name;
-  document.getElementById('bannerPrice').value = b.price;
-  banners.splice(i,1);
-  renderBanners();
-}
-
-function deleteBanner(i){ banners.splice(i,1); renderBanners(); }
-
-// ======= المنتجات =======
-let products = JSON.parse(localStorage.getItem('smsmProducts')) || [];
-const productList = document.getElementById('productList');
-
-function renderProducts() {
-  productList.innerHTML='';
-  products.forEach((p,i)=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.innerHTML=`
-      <img src="${p.image}" alt="${p.name}">
-      <div class="info"><h3>${p.name}</h3><p>${p.price}</p></div>
-      <div class="actions">
-        <button onclick="editProduct(${i})">تعديل</button>
-        <button onclick="deleteProduct(${i})">حذف</button>
-      </div>
-    `;
-    productList.appendChild(card);
-  });
-  localStorage.setItem('smsmProducts', JSON.stringify(products));
-}
-
-document.getElementById('addProductForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  const name=document.getElementById('productName').value;
-  const price=document.getElementById('productPrice').value;
-  const file=document.getElementById('productImageFile').files[0];
-  if(file){
-    const reader=new FileReader();
-    reader.onload=function(){
-      products.push({name,price,image:reader.result});
-      renderProducts();
-      e.target.reset();
-    }
-    reader.readAsDataURL(file);
-  }
-});
-
-function editProduct(i){
-  const p=products[i];
-  document.getElementById('productName').value=p.name;
-  document.getElementById('productPrice').value=p.price;
-  products.splice(i,1);
-  renderProducts();
-}
-
-function deleteProduct(i){ products.splice(i,1); renderProducts(); }
-
-// عرض أولي
-renderBanners();
-renderProducts();
 </script>
 </body>
 </html>
