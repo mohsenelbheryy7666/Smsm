@@ -45,7 +45,7 @@ body {
 
 h1 { text-align:center;margin:20px 0;font-size:28px;text-shadow:2px 2px 10px #ffe6f0; }
 
-/* ===== كارت العروض ===== */
+/* كارت العروض */
 .banner-card {
   width: 90%; max-width: 800px; margin: 20px auto;
   border-radius: 15px; overflow: hidden;
@@ -61,7 +61,7 @@ h1 { text-align:center;margin:20px 0;font-size:28px;text-shadow:2px 2px 10px #ff
   padding: 10px; text-align:center; font-size:16px; font-weight:bold; color:#333;
 }
 
-/* ===== كروت المنتجات ===== */
+/* كروت المنتجات */
 .products-container {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
@@ -205,6 +205,16 @@ function loadProducts(){
   });
 }
 loadProducts();
+
+// ===== تحديث تلقائي عند تغيير LocalStorage =====
+window.addEventListener('storage', (e)=>{
+  if(e.key==='smsmProducts'){ loadProducts(); }
+  if(e.key==='smsmBanners'){ 
+    banners = JSON.parse(localStorage.getItem('smsmBanners')) || [];
+    currentBanner=0;
+    showBanner(currentBanner);
+  }
+});
 
 // ===== زر الرجوع لأعلى =====
 window.addEventListener('scroll',()=>{
