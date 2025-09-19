@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menu Smsm - عميل</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+body {
+  font-family:'Cairo',sans-serif;
+  margin:0; padding:0;
+  background: linear-gradient(45deg, #ffffff, #ffe6f0, #d3d3d3, #f5f5dc, #654321);
+  background-size: 1200% 1200%;
+  animation: gradientBG 30s ease infinite;
+  color:#333;
+  overflow-x:hidden;
+}
+
+@keyframes gradientBG {
+  0%{background-position:0% 50%;}
+  25%{background-position:50% 50%;}
+  50%{background-position:100% 50%;}
+  75%{background-position:50% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+#welcome {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  display:flex; justify-content:center; align-items:center;
+  background:inherit;
+  z-index:1000;
+  animation:fadeOut 3s forwards;
+  animation-delay:2s;
+}
+#welcome h2 {
+  font-size:22px;
+  text-align:center;
+  color:#333;
+  text-shadow:0 0 15px #fff;
+  animation:pulseText 2s infinite;
+}
+@keyframes fadeOut { to {opacity:0; visibility:hidden;} }
+@keyframes pulseText {0%,100%{text-shadow:0 0 15px #fff;}50%{text-shadow:0 0 35px #ffe6f0;}}
+
+h1 { text-align:center;margin:20px 0;font-size:28px;text-shadow:2px 2px 10px #ffe6f0; }
+
+/* ===== كارت العروض ===== */
+.banner-card {
+  width: 90%; max-width: 800px; margin: 20px auto;
+  border-radius: 15px; overflow: hidden;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.3);
+  border: 2px solid #fff;
+  animation: slideUp 0.8s forwards;
+}
+.banner-card img {
+  width: 100%; height: 250px; object-fit: cover;
+}
+.banner-info {
+  padding: 10px; text-align:center; font-size:16px; font-weight:bold; color:#333;
+}
+
+/* ===== كروت المنتجات ===== */
+.products-container {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
+  padding:20px;
+}
+
+.product-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.4s, box-shadow 0.4s;
+  background: rgba(255,255,255,0.3);
+  border: 2px solid #fff;
+  box-shadow:0 8px 25px rgba(0,0,0,0.15);
+  padding-top: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideUp 0.8s forwards;
+}
+
+@keyframes slideUp { to { opacity:1; transform: translateY(0); } }
+
+.product-card img {
+  width: 80%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: transform 0.4s;
+}
+
+.product-card:hover img { transform: scale(1.08); }
+
+.product-card .divider {
+  width: 80%;
+  height: 2px;
+  background: #fff;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+.product-card .info {
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.product-card .info h3 { margin: 0; font-size: 14px; font-weight: bold; }
+.product-card .info p { margin: 5px 0 0 0; font-size:13px; }
+
+.product-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+}
+
+/* زر الرجوع لأعلى */
+#backToTop {
+  position:fixed; bottom:20px; right:20px; background:#654321; color:#fff;
+  border:none; padding:10px 15px; border-radius:50%; font-size:18px; cursor:pointer;
+  display:none; box-shadow:0 0 15px #d4d087;
+}
+
+footer { text-align:center; padding:15px; font-size:12px; color:#333; }
+
+</style>
+</head>
+<body>
+
+<div id="welcome"><h2>اهلا بك في منيو منتجات سمسم</h2></div>
+
+<h1>Menu Smsm ✨</h1>
+
+<!-- كارت العروض -->
+<div class="banner-card" id="bannerCard">
+  <img src="" id="bannerImg" alt="عرض">
+  <div class="banner-info" id="bannerInfo">جارى التحميل...</div>
+</div>
+
+<div class="products-container" id="productsContainer"></div>
+
+<button id="backToTop">↑</button>
+<footer>made by mohsen elbhery</footer>
+<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-20.mp3"></audio>
+
+<script>
+const bannerCard = document.getElementById('bannerCard');
+const bannerInfo = document.getElementById('bannerInfo');
+const bannerImg = document.getElementById('bannerImg');
+const productsContainer = document.getElementById('productsContainer');
+const clickSound = document.getElementById('clickSound');
+const backToTop = document.getElementById('backToTop');
+
+// ===== العروض =====
+let banners = JSON.parse(localStorage.getItem('smsmBanners')) || [];
+let currentBanner=0;
+
+function showBanner(i){
+  if(banners.length===0){
+    bannerInfo.textContent="لا توجد عروض";
+    bannerImg.src='';
+    return;
+  }
+  bannerImg.src = banners[i].image;
+  bannerInfo.textContent = `${banners[i].name} - ${banners[i].price}`;
+}
+
+if(banners.length>0){
+  showBanner(currentBanner);
+  setInterval(()=>{
+    currentBanner=(currentBanner+1)%banners.length;
+    showBanner(currentBanner);
+  },4000);
+}
+
+// ===== المنتجات =====
+function loadProducts(){
+  productsContainer.innerHTML='';
+  let products = JSON.parse(localStorage.getItem('smsmProducts')) || [];
+  products.forEach((p,index)=>{
+    const card=document.createElement('div');
+    card.className='product-card';
+    card.style.animationDelay = (index*0.1)+'s';
+    card.innerHTML=`
+      <img src="${p.image}" alt="${p.name}">
+      <div class="divider"></div>
+      <div class="info">
+        <h3>${p.name}</h3>
+        <p>${p.price}</p>
+      </div>
+    `;
+    card.addEventListener('click',()=>{
+      clickSound.volume=0.2;
+      clickSound.play();
+    });
+    productsContainer.appendChild(card);
+  });
+}
+loadProducts();
+
+// ===== زر الرجوع لأعلى =====
+window.addEventListener('scroll',()=>{
+  backToTop.style.display = window.scrollY > 200 ? 'block' : 'none';
+});
+backToTop.addEventListener('click', ()=>{
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+</script>
+
+</body>
+</html>
